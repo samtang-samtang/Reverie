@@ -130,6 +130,7 @@ export async function POST(req: NextRequest) {
               controller.enqueue(
                 send("done", {
                   id: saved.id,
+                  pkg: saved,
                   engine: ev.engine,
                   script: "script" in ev ? ev.script : undefined,
                   artifactId: "artifactId" in ev ? ev.artifactId : undefined,

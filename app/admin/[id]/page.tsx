@@ -48,6 +48,29 @@ const STATUS_LABEL: Record<StoryStatus, string> = {
   published: "已发布",
   archived: "已下架",
 };
+
+const localStoryKey = (id: string) => `reverie:story:${id}`;
+
+function readCachedStory(id: string): StoryPackage | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = window.localStorage.getItem(localStoryKey(id));
+    if (!raw) return null;
+    const pkg = JSON.parse(raw) as StoryPackage;
+    return pkg?.id === id ? pkg : null;
+  } catch {
+    return null;
+  }
+}
+
+function cacheStoryPackage(pkg: StoryPackage | null | undefined) {
+  if (!pkg?.id || typeof window === "undefined") return;
+  try {
+    window.localStorage.setItem(localStoryKey(pkg.id), JSON.stringify(pkg));
+  } catch {
+    // localStorage 只是线上 serverless 临时存储的浏览器兜底，失败不阻断编辑。
+  }
+}
 const VIDEO_URL_RE = /\.(mp4|webm|mov)(?:\?|$)/i;
 
 // 图像 / 视频生成提示词一律走英文：剔除任何 CJK 字符，避免中文混入生图模型。
@@ -207,6 +230,7 @@ export default function StoryEditor() {
   const [fixLog, setFixLog] = useState<string[]>([]);
   const [previewImage, setPreviewImage] = useState<string>("");
   const [mounted, setMounted] = useState(false);
+  const [loadError, setLoadError] = useState("");
   const [history, setHistory] = useState<{ label: string; pkg: StoryPackage }[]>([]);
   const assetBusyRef = useRef(false);
 
@@ -237,11 +261,33 @@ export default function StoryEditor() {
       .then((d) => {
         if (d.pkg) {
           setPkg(d.pkg);
+          cacheStoryPackage(d.pkg);
           setIssues(d.issues || []);
           setStatus(d.status);
+          setLoadError("");
+        } else {
+          const cached = readCachedStory(id);
+          if (cached) {
+            setPkg(cached);
+            setIssues(validatePackage(cached));
+            setStatus((cached.status || "draft") as StoryStatus);
+            setLoadError("线上临时存储未读到该故事，已从本机缓存恢复。请保存一次让当前实例重新落库。");
+          } else {
+            setLoadError(d.error || "未找到剧本");
+          }
         }
       })
-      .catch(() => {});
+      .catch(() => {
+        const cached = readCachedStory(id);
+        if (cached) {
+          setPkg(cached);
+          setIssues(validatePackage(cached));
+          setStatus((cached.status || "draft") as StoryStatus);
+          setLoadError("网络读取失败，已从本机缓存恢复。");
+        } else {
+          setLoadError("加载失败，且本机没有缓存。");
+        }
+      });
   }, [id]);
 
   useEffect(() => {
@@ -263,6 +309,7 @@ export default function StoryEditor() {
   // 生成即落库：写入内存状态并立刻持久化到磁盘，避免生成的素材因忘记保存而丢失。
   async function applyAndSave(next: StoryPackage, okMsg: string) {
     setPkg(next);
+    cacheStoryPackage(next);
     await save(next);
     setMsg(okMsg);
   }
@@ -464,6 +511,7 @@ export default function StoryEditor() {
       }).then((x) => x.json());
       if (r.pkg) {
         setPkg(r.pkg);
+        cacheStoryPackage(r.pkg);
         setIssues(r.issues || []);
         setDirty(false);
         setMsg(override ? `${fixLog.length ? "修复完成并" : ""}已保存` : "已保存");
@@ -578,7 +626,12 @@ export default function StoryEditor() {
   if (!pkg) {
     return (
       <div className="admin">
-        <p className="admin-hint">加载中…</p>
+        <p className="admin-hint">{loadError || "加载中…"}</p>
+        {loadError && (
+          <Link href="/admin" className="admin-btn">
+            返回故事库
+          </Link>
+        )}
       </div>
     );
   }

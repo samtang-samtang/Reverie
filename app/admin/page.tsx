@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import type { NodePlan } from "@/lib/scriptAgent";
+import type { StoryPackage } from "@/lib/storyPackage";
 
 interface AdminItem {
   id: string;
@@ -40,6 +41,17 @@ const EMPTY_GENERATION: GenerationSnapshot = {
   generatedScript: "",
   artifactId: "",
 };
+
+const localStoryKey = (id: string) => `reverie:story:${id}`;
+
+function cacheStoryPackage(pkg: StoryPackage | undefined) {
+  if (!pkg?.id || typeof window === "undefined") return;
+  try {
+    window.localStorage.setItem(localStoryKey(pkg.id), JSON.stringify(pkg));
+  } catch {
+    // 线上 serverless 文件存储可能短暂不可读；缓存失败不阻断生成流程。
+  }
+}
 
 let generationSnapshot: GenerationSnapshot = EMPTY_GENERATION;
 let generationAbort: AbortController | null = null;
@@ -186,6 +198,7 @@ export default function AdminDashboard() {
       let newId = "";
       await consumeSse(res, (p) => {
         newId = (p.id as string) || "";
+        cacheStoryPackage(p.pkg as StoryPackage | undefined);
         const eng = p.engine === "llm" ? "AI" : "模板";
         if (newId) {
           appendGenerationStep(`故事包已落库（引擎：${eng}）`);
@@ -227,6 +240,7 @@ export default function AdminDashboard() {
       let newId = "";
       await consumeSse(res, (p) => {
         newId = (p.id as string) || "";
+        cacheStoryPackage(p.pkg as StoryPackage | undefined);
         appendGenerationStep(`导入完成（引擎：${p.engine === "llm" ? "AI" : "模板"}）`);
       });
       load();

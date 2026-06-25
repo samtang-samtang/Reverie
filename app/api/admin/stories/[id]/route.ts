@@ -22,12 +22,11 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
 // 保存编辑后的完整故事包。
 export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
   const existing = getPackage(params.id);
-  if (!existing) return NextResponse.json({ error: "未找到剧本" }, { status: 404 });
   const incoming = (await req.json().catch(() => null)) as StoryPackage | null;
   if (!incoming) return NextResponse.json({ error: "请求体无效" }, { status: 400 });
   // 锁定 id，避免改名导致孤儿文件
-  incoming.id = existing.id;
-  incoming.createdAt = existing.createdAt;
+  incoming.id = existing?.id || params.id;
+  incoming.createdAt = existing?.createdAt || incoming.createdAt;
   const saved = savePackage(incoming);
   const issues = validatePackage(saved);
   return NextResponse.json({ pkg: saved, qa: qaSummary(issues), issues });
