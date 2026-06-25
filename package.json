@@ -1,0 +1,24 @@
+{
+  "name": "reverie",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Reverie —— AI 互动影游平台（一句构想 / 导入剧本 → 结构化剧情树 → 实时分支生成）",
+  "scripts": {
+    "dev": "bash -c 'ulimit -n 61440 2>/dev/null; next dev -p 3000'",
+    "build": "bash -c 'ulimit -n 61440 2>/dev/null; next build'",
+    "start": "bash -c 'ulimit -n 61440 2>/dev/null; next start -p 3000'"
+  },
+  "dependencies": {
+    "next": "14.2.5",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "react-markdown": "^9.1.0",
+    "remark-gfm": "^4.0.1"
+  },
+  "devDependencies": {
+    "@types/node": "20.14.10",
+    "@types/react": "18.3.3",
+    "@types/react-dom": "18.3.0",
+    "typescript": "5.5.3"
+  }
+}

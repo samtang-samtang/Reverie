@@ -1,0 +1,443 @@
+{
+  "id": "slip-into-your-heart",
+  "title": "心动入戏",
+  "tagline": "空礼堂最后一束追光下，她以为台下无人——直到撞见躲在阴影里的你。",
+  "genre": "校园 · 青春恋爱",
+  "idea": "暗恋话剧社台柱的少年，在毕业公演前夜撞破她独自排练的告别，发现她藏着一个会让两人分开的秘密。",
+  "themeTags": [
+    "校园",
+    "青春",
+    "恋爱"
+  ],
+  "language": "zh",
+  "ageRating": "13+",
+  "status": "published",
+  "poster": "/covers/slip-cover.jpeg",
+  "character": "Mizuki",
+  "visualStyle": "cinematic anime illustration, school theater auditorium and backstage, warm afternoon to sunset light, red and white stage curtains, soft bokeh, youthful romance mood, highly detailed, vertical composition. the girl Mizuki has long wavy soft-pink hair, gentle blue eyes, wears a white cardigan over a sailor-collar school uniform with a red ribbon bow and navy pleated skirt",
+  "characters": [
+    {
+      "name": "Mizuki",
+      "sheet": "the girl Mizuki has long wavy soft-pink hair, gentle blue eyes, wears a white cardigan over a sailor-collar school uniform with a red ribbon bow and navy pleated skirt",
+      "persona": "话剧社台柱，清冷、敏感、藏着即将离开的秘密，外表疏离内心炽烈",
+      "voice": {
+        "pitch": 1.4,
+        "rate": 1
+      }
+    }
+  ],
+  "arc": {
+    "premise": "‘你’暗恋话剧社台柱 Mizuki。毕业公演前夜，她正为‘要不要为你改写剧本的结局’而动摇，同时藏着一个会让你们分开的秘密。核心问题：在公演那晚之前，你们能否把这段心动说清楚。",
+    "protagonistGoal": "在毕业公演夜到来前，让清冷又有心事的 Mizuki 对你敞开心扉。",
+    "themes": [
+      "暗恋",
+      "离别",
+      "勇气"
+    ],
+    "emotionalArc": "试探的暧昧 → 秘密带来的不舍 → 雨夜抉择的释放",
+    "locations": [
+      "auditorium",
+      "rooftop",
+      "rainStreet"
+    ]
+  },
+  "shots": {
+    "wide": "/covers/slip-open.jpeg",
+    "mizukiMed": "/covers/slip-cover.jpeg",
+    "mizukiCu": "/covers/mizuki-cu.jpeg",
+    "mizukiShy": "/covers/mizuki-shy.jpeg",
+    "mizukiSmile": "/covers/mizuki-smile.jpeg",
+    "mizukiTear": "/covers/mizuki-tear.jpeg",
+    "twoShot": "/covers/two-shot.jpeg",
+    "video": "/covers/opening.mp4",
+    "rooftop": "/covers/rooftop.jpeg",
+    "rainStreet": "/covers/rain-street.jpeg",
+    "cg": "/covers/cg-handhold.jpeg"
+  },
+  "startNodeId": "n0",
+  "published": true,
+  "nodes": [
+    {
+      "id": "n0",
+      "act": 0,
+      "chapter": "序章 · 谢幕",
+      "location": "auditorium",
+      "imagePrompt": "single harsh spotlight on Mizuki alone center stage in a pitch-dark empty auditorium, clutching a torn script to her chest, tears on her face mid farewell monologue, dramatic chiaroscuro",
+      "affinityDelta": 0,
+      "beats": [
+        {
+          "text": "礼堂的门在你身后合拢，黑暗吞掉所有声音——只剩舞台中央一束惨白的追光。"
+        },
+        {
+          "speaker": "Mizuki",
+          "text": "就算大幕落下，我也不会回头。哪怕台下，空无一人。"
+        },
+        {
+          "text": "她的声音在空礼堂里发颤，攥着剧本的指节泛白。那不像排练，像一场只演给自己看的告别。"
+        },
+        {
+          "text": "追光骤灭。她猛地转身，撞见站在过道阴影里的你，瞳孔一缩——"
+        },
+        {
+          "speaker": "Mizuki",
+          "text": "……你站在那儿，多久了？"
+        }
+      ],
+      "choices": [
+        {
+          "label": "举起器材箱，假装只是路过",
+          "next": "n0a"
+        },
+        {
+          "label": "坦白：你那句台词，根本不是演的",
+          "next": "n0b"
+        },
+        {
+          "label": "逼问她，到底要离开去哪",
+          "next": "n0c"
+        }
+      ]
+    },
+    {
+      "id": "n0a",
+      "act": 0,
+      "chapter": "擦肩",
+      "location": "auditorium",
+      "imagePrompt": "Mizuki smiling faintly as if seeing through a lie, auditorium backstage, soft light",
+      "affinityDelta": 0,
+      "beats": [
+        {
+          "text": "你扬了扬手里的器材箱，假装只是顺路经过。"
+        },
+        {
+          "speaker": "Mizuki",
+          "text": "是吗。可还器材的人，不会在台词停顿的地方，也跟着屏住呼吸。"
+        },
+        {
+          "text": "她轻轻笑了一下，那点笑意却没落进眼底。"
+        }
+      ],
+      "choices": [
+        {
+          "label": "承认其实是为她而来",
+          "next": "n1"
+        },
+        {
+          "label": "嘴硬到底，转身要走",
+          "next": "n1"
+        }
+      ]
+    },
+    {
+      "id": "n0b",
+      "act": 0,
+      "chapter": "坦白",
+      "location": "auditorium",
+      "imagePrompt": "Mizuki blushing and lowering her eyes, slipping a folded script into your hand, backstage",
+      "affinityDelta": 2,
+      "beats": [
+        {
+          "speaker": "你",
+          "text": "我一直坐在台下最后一排，从开学到现在，从没敢打扰你。"
+        },
+        {
+          "text": "Mizuki 握笔的指尖顿了顿，耳尖悄悄泛红。"
+        },
+        {
+          "speaker": "Mizuki",
+          "text": "难怪总觉得身后有影子……原来不是错觉。"
+        },
+        {
+          "text": "她忽然抽出一页折好的纸塞进你掌心，纸边还带着后台的凉意。"
+        },
+        {
+          "speaker": "Mizuki",
+          "text": "公演前的空教室，别迟到，别告诉任何人。"
+        }
+      ],
+      "choices": [
+        {
+          "label": "答应她，绝不告诉别人",
+          "next": "n1"
+        },
+        {
+          "label": "追问纸上写了什么",
+          "next": "n1"
+        },
+        {
+          "label": "悄悄展开看她改的结局",
+          "next": "n1",
+          "premium": true
+        }
+      ]
+    },
+    {
+      "id": "n0c",
+      "act": 0,
+      "chapter": "独白",
+      "location": "auditorium",
+      "imagePrompt": "Mizuki looking away wistfully toward empty seats, melancholic sunset light",
+      "affinityDelta": 1,
+      "beats": [
+        {
+          "speaker": "你",
+          "text": "那段独白……是写给谁的？"
+        },
+        {
+          "text": "她沉默了几秒，目光落在空荡的观众席上。"
+        },
+        {
+          "speaker": "Mizuki",
+          "text": "写给一个，注定要在故事结束前离开的人。"
+        },
+        {
+          "text": "一句话，压低了整个礼堂的空气。"
+        }
+      ],
+      "choices": [
+        {
+          "label": "追问她要去哪",
+          "next": "n1"
+        },
+        {
+          "label": "什么也不问，陪她一起沉默",
+          "next": "n1"
+        }
+      ]
+    },
+    {
+      "id": "n1",
+      "act": 1,
+      "chapter": "天台 · 秘密",
+      "location": "rooftop",
+      "asset": "/covers/rooftop.jpeg",
+      "imagePrompt": "rooftop at dusk, Mizuki standing by the wire fence telling you she is leaving, orange purple sky",
+      "affinityDelta": 1,
+      "beats": [
+        {
+          "text": "几天后的黄昏，她约你上了天台。橙紫色的云压在城市的边缘。"
+        },
+        {
+          "text": "风把她的长发吹乱，她却没有去拢。"
+        },
+        {
+          "speaker": "Mizuki",
+          "text": "有件事，我一直没敢说。"
+        },
+        {
+          "speaker": "Mizuki",
+          "text": "其实……我可能要走了。被一家剧团签走，去很远的地方。"
+        },
+        {
+          "text": "她的声音很轻，却像在你心口敲了一下。"
+        }
+      ],
+      "choices": [
+        {
+          "label": "问她：那你，愿意留下吗",
+          "next": "n1a"
+        },
+        {
+          "label": "假装祝福，把心事咽下去",
+          "next": "n1b"
+        },
+        {
+          "label": "握住她的手，说我陪你一起去",
+          "next": "n1a",
+          "premium": true
+        }
+      ]
+    },
+    {
+      "id": "n1a",
+      "act": 1,
+      "chapter": "动摇",
+      "location": "rooftop",
+      "asset": "/covers/rooftop.jpeg",
+      "imagePrompt": "Mizuki turning her head, eyes glistening with tears at dusk rooftop",
+      "affinityDelta": 2,
+      "beats": [
+        {
+          "speaker": "Mizuki",
+          "text": "留下来……我也想过。可我不敢拿你的未来开玩笑。"
+        },
+        {
+          "text": "她终于转过头，眼里有不属于这个黄昏的湿意。"
+        },
+        {
+          "speaker": "Mizuki",
+          "text": "公演那晚，如果你还在台下，我就当你给了我答案。"
+        }
+      ],
+      "choices": [
+        {
+          "label": "承诺：那晚我一定到场",
+          "next": "n2"
+        },
+        {
+          "label": "说我们再想想别的办法",
+          "next": "n2"
+        }
+      ]
+    },
+    {
+      "id": "n1b",
+      "act": 1,
+      "chapter": "克制",
+      "location": "rooftop",
+      "asset": "/covers/rooftop.jpeg",
+      "imagePrompt": "two long shadows at dusk rooftop, a quiet distance between them, bittersweet",
+      "affinityDelta": -1,
+      "beats": [
+        {
+          "text": "你把‘别走’两个字嚼碎，又咽了回去，只挤出一句生硬的祝福。"
+        },
+        {
+          "speaker": "Mizuki",
+          "text": "……谢谢。她笑了，笑得比哭还难看。"
+        },
+        {
+          "text": "黄昏沉下去，两个人的影子被拉得很长，却始终没有靠近。"
+        }
+      ],
+      "choices": [
+        {
+          "label": "还是追上去，说出真心话",
+          "next": "n2"
+        },
+        {
+          "label": "让这段心动到此为止",
+          "next": "n2"
+        }
+      ]
+    },
+    {
+      "id": "n2",
+      "act": 2,
+      "chapter": "雨夜 · 抉择",
+      "location": "rainStreet",
+      "asset": "/covers/rain-street.jpeg",
+      "imagePrompt": "rainy night street after the show, Mizuki under a transparent umbrella facing you across the crosswalk, neon reflections",
+      "affinityDelta": 1,
+      "beats": [
+        {
+          "text": "公演那晚，外面下起了雨。散场的街灯把水洼染成一片霓虹。"
+        },
+        {
+          "text": "她撑着伞站在斑马线另一头，校服被雨气浸得发凉。"
+        },
+        {
+          "speaker": "Mizuki",
+          "text": "你来了……我以为你不会来。"
+        },
+        {
+          "text": "雨声里，她一字一句地问——"
+        },
+        {
+          "speaker": "Mizuki",
+          "text": "你要我留下来吗？只要你说，我就留下。"
+        }
+      ],
+      "choices": [
+        {
+          "label": "大声说：留下来，和我一起",
+          "next": "e_stay"
+        },
+        {
+          "label": "说出口的却是：去追你的舞台吧",
+          "next": "e_go"
+        },
+        {
+          "label": "什么都不说，冲进雨里抱住她",
+          "next": "e_cg",
+          "premium": true
+        }
+      ]
+    },
+    {
+      "id": "e_stay",
+      "act": 2,
+      "chapter": "结局 · 留下",
+      "location": "rainStreet",
+      "asset": "/covers/rain-street.jpeg",
+      "imagePrompt": "Mizuki crying and nodding in the rain, relieved tearful smile",
+      "affinityDelta": 3,
+      "isEnding": true,
+      "endingLabel": "留下",
+      "beats": [
+        {
+          "speaker": "你",
+          "text": "留下来。哪怕只为我这一个观众，也请你留下来。"
+        },
+        {
+          "text": "她怔了很久，然后用力点头，泪水混进了雨里。"
+        },
+        {
+          "speaker": "Mizuki",
+          "text": "那……这一次的结局，我们一起改。"
+        },
+        {
+          "text": "〔结局达成 · 心动入戏〕"
+        }
+      ],
+      "choices": []
+    },
+    {
+      "id": "e_cg",
+      "act": 2,
+      "chapter": "隐藏结局 · 拥抱",
+      "location": "rainStreet",
+      "asset": "/covers/cg-handhold.jpeg",
+      "imagePrompt": "two hands clasped tightly in the rain, dropped umbrella, embrace, folded script crumpled between fingers",
+      "affinityDelta": 3,
+      "isEnding": true,
+      "endingLabel": "隐藏 · 拥抱",
+      "beats": [
+        {
+          "text": "你没有再等她说完，冲进雨里抱住了她。"
+        },
+        {
+          "text": "伞跌落在水洼里，雨浇透两个人，她却笑出了声。"
+        },
+        {
+          "speaker": "Mizuki",
+          "text": "……你这个笨蛋，台词都不按剧本来。"
+        },
+        {
+          "text": "你们的手在雨里紧紧扣住，那页改过的剧本被攥得发皱。"
+        },
+        {
+          "text": "〔隐藏结局 · 不演了，就这样在一起〕"
+        }
+      ],
+      "choices": []
+    },
+    {
+      "id": "e_go",
+      "act": 2,
+      "chapter": "结局 · 目送",
+      "location": "rainStreet",
+      "asset": "/covers/rain-street.jpeg",
+      "imagePrompt": "Mizuki turning away into the rain without looking back, green traffic light, melancholic",
+      "affinityDelta": -1,
+      "isEnding": true,
+      "endingLabel": "目送",
+      "beats": [
+        {
+          "speaker": "你",
+          "text": "去吧。去你该发光的那个舞台。"
+        },
+        {
+          "text": "她的眼神一点点黯下去，最终化成一个很轻的‘嗯’。"
+        },
+        {
+          "text": "绿灯亮起，她转身走进雨里，没有回头。"
+        },
+        {
+          "text": "〔结局 · 我们都活成了对方的观众〕"
+        }
+      ],
+      "choices": []
+    }
+  ]
+}
