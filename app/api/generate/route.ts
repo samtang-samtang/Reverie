@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
       mustConverge?: boolean; // 本幕是否必须收束到锚点
     };
 
-  const pkg = getPackage(storyId);
+  const pkg = await getPackage(storyId);
   if (!pkg) return NextResponse.json({ error: "未知剧本" }, { status: 404 });
   if (!playerAction?.trim())
     return NextResponse.json({ error: "缺少 playerAction" }, { status: 400 });

@@ -5,9 +5,11 @@
 import fs from "node:fs";
 import path from "node:path";
 import crypto from "node:crypto";
+import { put } from "@vercel/blob";
 import { usesTemporaryStorage } from "./runtimeStorage";
 
 const UPLOAD_DIR = path.join(process.cwd(), "public", "uploads");
+const HAS_VERCEL_BLOB = Boolean(process.env.BLOB_READ_WRITE_TOKEN);
 
 function ensureDir() {
   fs.mkdirSync(UPLOAD_DIR, { recursive: true });
@@ -31,18 +33,27 @@ export async function persistRemoteAsset(
   kind: "image" | "video"
 ): Promise<string> {
   if (!url || typeof url !== "string") return url;
-  // 已是本地路径或 data URI，无需处理
-  if (url.startsWith("/uploads/") || url.startsWith("data:")) return url;
-  // 线上 Serverless 的代码目录只读；Demo 模式保留远端临时 URL，避免写 public/uploads 失败。
-  if (usesTemporaryStorage()) return url;
+  // 已是稳定地址或 data URI，无需处理
+  if (url.startsWith("/uploads/") || url.startsWith("data:") || url.includes(".blob.vercel-storage.com/")) return url;
   try {
-    ensureDir();
     const res = await fetch(url, { signal: AbortSignal.timeout(120_000) });
     if (!res.ok) return url;
     const buf = Buffer.from(await res.arrayBuffer());
     const fallback = kind === "video" ? "mp4" : "png";
-    const ext = extFromContentType(res.headers.get("content-type"), fallback);
+    const contentType = res.headers.get("content-type") || (kind === "video" ? "video/mp4" : "image/png");
+    const ext = extFromContentType(contentType, fallback);
     const name = `${kind}-${Date.now()}-${crypto.randomBytes(4).toString("hex")}.${ext}`;
+    if (HAS_VERCEL_BLOB) {
+      const blob = await put(`uploads/${name}`, buf, {
+        access: "public",
+        contentType,
+        addRandomSuffix: false,
+      });
+      return blob.url;
+    }
+    // 线上 Serverless 的代码目录只读；未配置 Blob 时退回原 URL，至少短期内可用。
+    if (usesTemporaryStorage()) return url;
+    ensureDir();
     fs.writeFileSync(path.join(UPLOAD_DIR, name), new Uint8Array(buf));
     return `/uploads/${name}`;
   } catch {

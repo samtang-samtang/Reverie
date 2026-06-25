@@ -58,7 +58,7 @@ async function* generateIdeaChain(opts: {
 }
 
 export async function GET() {
-  const items = listPackages().map((p) => ({
+  const items = (await listPackages()).map((p) => ({
     id: p.id,
     title: p.title,
     titleEn: p.titleEn || "",
@@ -126,7 +126,7 @@ export async function POST(req: NextRequest) {
               if (isImport) ev.pkg.script = script!.trim();
               if (generatedScript) ev.pkg.script = generatedScript;
               if (artifactId) ev.pkg.artifactId = artifactId;
-              const saved = savePackage(ev.pkg);
+              const saved = await savePackage(ev.pkg);
               controller.enqueue(
                 send("done", {
                   id: saved.id,

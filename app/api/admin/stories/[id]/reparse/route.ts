@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic";
 
 // 将当前故事的游戏脚本文本重新解析为结构化剧情树，并写回同一个故事包。
 export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
-  const existing = getPackage(params.id);
+  const existing = await getPackage(params.id);
   if (!existing) return NextResponse.json({ error: "未找到剧本" }, { status: 404 });
 
   const body = (await req.json().catch(() => ({}))) as { script?: string };
@@ -56,7 +56,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     script,
   };
 
-  const saved = savePackage(merged);
+  const saved = await savePackage(merged);
   const issues = validatePackage(saved);
   return NextResponse.json({
     pkg: saved,

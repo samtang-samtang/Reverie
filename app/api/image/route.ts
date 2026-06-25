@@ -14,7 +14,7 @@ export async function POST(req: NextRequest) {
   };
   if (!prompt?.trim()) return NextResponse.json({ error: "缺少 prompt" }, { status: 400 });
 
-  const pkg = storyId ? getPackage(storyId) : null;
+  const pkg = storyId ? await getPackage(storyId) : null;
   const full = pkg ? `${prompt}. ${pkg.visualStyle}` : prompt;
   const r = await generateImage(full);
   // 把临时签名 URL 落地本地，避免 24h 后过期导致图片变黑

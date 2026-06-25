@@ -48,7 +48,7 @@ POST /api/admin/stories  ──────────────►│
 | 文件 | 作用 |
 |---|---|
 | `lib/storyPackage.ts` | **Story Package 生产级 schema** + 节点/选择/角色/场景/圣经类型 + QA 质检（断链/孤儿/缺资产/无结局） |
-| `lib/packageStore.ts` | 故事源读写（`data/stories/*.json`）：列表/发布筛选/状态流转/版本号/删除 |
+| `lib/packageStore.ts` | 故事源读写：线上优先 Supabase Postgres，未配置时回退 `data/stories/*.json` |
 | `lib/storyTree.ts` | **一句构想 / 导入剧本 → Story Package** 故事树生成与脚本拆解模块（两步 LLM 生成圣经+剧情树，无 LLM 走模板兜底） |
 | `lib/scriptAgent.ts` | **大纲 → 游戏脚本 Agent**（三步：分析 → 节点规划 → 扩写；可链接 importScript 全链路） |
 | `lib/artifactStore.ts` | 创作中间产物存储（`data/outlines/`、`data/scripts/`） |
@@ -117,6 +117,37 @@ ARK_MODEL=seed-2-0-mini-260428
 **重启**服务后，页面右上角会显示「● {模型名} · 流式」，剧情即由大模型实时流式生成。
 
 > 注意：在终端里 `export` 过 `ARK_*` 会盖过 `.env` 文件（进程环境优先级更高），如改了模型却不生效，请在干净 shell 中重启。
+
+### 线上持久化（Vercel 部署必配）
+
+Vercel Serverless 没有持久文件系统，不能依赖 `data/stories/*.json` 或 `public/uploads/` 写入保存线上创作结果。生产/线上 demo 建议配置：
+
+```bash
+# Supabase Postgres：故事包 JSON 持久化
+SUPABASE_URL=https://xxxx.supabase.co
+SUPABASE_SERVICE_ROLE_KEY=eyJ...
+SUPABASE_STORIES_TABLE=stories
+
+# Vercel Blob：图片/视频资产持久化
+BLOB_READ_WRITE_TOKEN=vercel_blob_rw_...
+```
+
+Supabase 建表 SQL：
+
+```sql
+create table if not exists public.stories (
+  id text primary key,
+  title text,
+  status text,
+  updated_at timestamptz default now(),
+  pkg jsonb not null
+);
+
+create index if not exists stories_updated_at_idx
+  on public.stories (updated_at desc);
+```
+
+配置后，创作者后台生成/编辑/发布的故事包会写入 Supabase；生成的图片和视频会上传到 Vercel Blob，故事包中保存永久 URL。
 
 ## 五、已知环境问题
 

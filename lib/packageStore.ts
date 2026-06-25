@@ -1,5 +1,5 @@
-// 仅服务端使用（API 路由）：把故事包读写到 data/stories/*.json。
-// 这是平台的"故事源"——前台读已发布包，后台读写所有包。
+// 仅服务端使用（API 路由）：故事包持久化。
+// 线上优先使用 Supabase Postgres；未配置时回退到 data/stories/*.json，方便本地开发。
 import fs from "node:fs";
 import path from "node:path";
 import { StoryPackage, StoryStatus, effectiveStatus } from "./storyPackage";
@@ -7,6 +7,35 @@ import { bundledDataRoot, dataRoot, usesTemporaryStorage } from "./runtimeStorag
 
 const BUNDLED_DIR = path.join(bundledDataRoot(), "stories");
 const WRITE_DIR = path.join(dataRoot(), "stories");
+const SUPABASE_URL = (process.env.SUPABASE_URL || "").replace(/\/+$/, "");
+const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || "";
+const STORIES_TABLE = process.env.SUPABASE_STORIES_TABLE || "stories";
+
+function hasSupabase() {
+  return Boolean(SUPABASE_URL && SUPABASE_KEY);
+}
+
+function supabaseHeaders(extra?: HeadersInit): HeadersInit {
+  return {
+    apikey: SUPABASE_KEY,
+    Authorization: `Bearer ${SUPABASE_KEY}`,
+    "Content-Type": "application/json",
+    ...extra,
+  };
+}
+
+async function supabaseFetch(pathAndQuery: string, init?: RequestInit) {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/${pathAndQuery}`, {
+    ...init,
+    headers: supabaseHeaders(init?.headers),
+    cache: "no-store",
+  });
+  if (!res.ok) {
+    const detail = await res.text().catch(() => "");
+    throw new Error(`Supabase ${res.status}: ${detail.slice(0, 240)}`);
+  }
+  return res;
+}
 
 function ensureDir() {
   fs.mkdirSync(WRITE_DIR, { recursive: true });
@@ -26,7 +55,7 @@ function readPackagesFrom(dir: string): StoryPackage[] {
   return out;
 }
 
-export function listPackages(): StoryPackage[] {
+function listPackagesLocal(): StoryPackage[] {
   ensureDir();
   const merged = new Map<string, StoryPackage>();
   for (const pkg of readPackagesFrom(BUNDLED_DIR)) merged.set(pkg.id, pkg);
@@ -36,16 +65,29 @@ export function listPackages(): StoryPackage[] {
   return out.sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
 }
 
+export async function listPackages(): Promise<StoryPackage[]> {
+  if (hasSupabase()) {
+    try {
+      const res = await supabaseFetch(`${STORIES_TABLE}?select=pkg&order=updated_at.desc`);
+      const rows = (await res.json()) as { pkg: StoryPackage }[];
+      return rows.map((r) => r.pkg).filter(Boolean);
+    } catch (e) {
+      console.error("[packageStore] Supabase list failed, fallback local:", e);
+    }
+  }
+  return listPackagesLocal();
+}
+
 // 前台只能看到已发布的包
-export function listPublished(): StoryPackage[] {
-  return listPackages().filter((p) => effectiveStatus(p) === "published");
+export async function listPublished(): Promise<StoryPackage[]> {
+  return (await listPackages()).filter((p) => effectiveStatus(p) === "published");
 }
 
-export function listByStatus(status: StoryStatus): StoryPackage[] {
-  return listPackages().filter((p) => effectiveStatus(p) === status);
+export async function listByStatus(status: StoryStatus): Promise<StoryPackage[]> {
+  return (await listPackages()).filter((p) => effectiveStatus(p) === status);
 }
 
-export function getPackage(id: string): StoryPackage | null {
+function getPackageLocal(id: string): StoryPackage | null {
   ensureDir();
   // 约定文件名 = id；但兼容文件名与 id 不一致的旧种子（如 slip.json / id=slip-into-your-heart）
   const p = path.join(WRITE_DIR, `${safeId(id)}.json`);
@@ -56,7 +98,20 @@ export function getPackage(id: string): StoryPackage | null {
       return null;
     }
   }
-  return listPackages().find((x) => x.id === id) || null;
+  return listPackagesLocal().find((x) => x.id === id) || null;
+}
+
+export async function getPackage(id: string): Promise<StoryPackage | null> {
+  if (hasSupabase()) {
+    try {
+      const res = await supabaseFetch(`${STORIES_TABLE}?select=pkg&id=eq.${encodeURIComponent(id)}&limit=1`);
+      const rows = (await res.json()) as { pkg: StoryPackage }[];
+      return rows[0]?.pkg || null;
+    } catch (e) {
+      console.error("[packageStore] Supabase get failed, fallback local:", e);
+    }
+  }
+  return getPackageLocal(id);
 }
 
 // 找出某 id 对应的真实文件路径（兼容文件名 ≠ id 的旧种子）
@@ -76,7 +131,7 @@ function fileForIdIn(dir: string, id: string): string | null {
   return null;
 }
 
-export function savePackage(pkg: StoryPackage): StoryPackage {
+function savePackageLocal(pkg: StoryPackage): StoryPackage {
   ensureDir();
   pkg.updatedAt = Date.now();
   pkg.createdAt = pkg.createdAt || pkg.updatedAt;
@@ -87,15 +142,52 @@ export function savePackage(pkg: StoryPackage): StoryPackage {
   return pkg;
 }
 
-export function deletePackage(id: string): boolean {
+export async function savePackage(pkg: StoryPackage): Promise<StoryPackage> {
+  pkg.updatedAt = Date.now();
+  pkg.createdAt = pkg.createdAt || pkg.updatedAt;
+  pkg.version = (pkg.version || 0) + 1;
+  if (hasSupabase()) {
+    try {
+      await supabaseFetch(`${STORIES_TABLE}?on_conflict=id`, {
+        method: "POST",
+        headers: { Prefer: "resolution=merge-duplicates" },
+        body: JSON.stringify({
+          id: pkg.id,
+          title: pkg.title,
+          status: effectiveStatus(pkg),
+          updated_at: new Date(pkg.updatedAt).toISOString(),
+          pkg,
+        }),
+      });
+      return pkg;
+    } catch (e) {
+      console.error("[packageStore] Supabase save failed, fallback local:", e);
+    }
+  }
+  // savePackageLocal 会递增 version，这里已经递增过，所以直接写文件。
+  ensureDir();
+  const target = fileForIdIn(WRITE_DIR, pkg.id) || path.join(WRITE_DIR, `${safeId(pkg.id)}.json`);
+  fs.writeFileSync(target, JSON.stringify(pkg, null, 2), "utf8");
+  return pkg;
+}
+
+export async function deletePackage(id: string): Promise<boolean> {
+  if (hasSupabase()) {
+    try {
+      await supabaseFetch(`${STORIES_TABLE}?id=eq.${encodeURIComponent(id)}`, { method: "DELETE" });
+      return true;
+    } catch (e) {
+      console.error("[packageStore] Supabase delete failed, fallback local:", e);
+    }
+  }
   const p = fileForIdIn(WRITE_DIR, id) || (!usesTemporaryStorage() ? fileForIdIn(BUNDLED_DIR, id) : null);
   if (!p) return false;
   fs.unlinkSync(p);
   return true;
 }
 
-export function setStatus(id: string, status: StoryStatus): StoryPackage | null {
-  const pkg = getPackage(id);
+export async function setStatus(id: string, status: StoryStatus): Promise<StoryPackage | null> {
+  const pkg = await getPackage(id);
   if (!pkg) return null;
   pkg.status = status;
   pkg.published = status === "published";

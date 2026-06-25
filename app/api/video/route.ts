@@ -14,7 +14,7 @@ export async function POST(req: NextRequest) {
   };
   if (!prompt?.trim()) return NextResponse.json({ error: "缺少 prompt" }, { status: 400 });
 
-  const pkg = storyId ? getPackage(storyId) : null;
+  const pkg = storyId ? await getPackage(storyId) : null;
   const node = nodeId && pkg ? pkg.nodes.find((n) => n.id === nodeId) : null;
   const speakers = Array.from(new Set((node?.beats || []).map((b) => b.speaker).filter(Boolean))) as string[];
   // 该节点真正出场的命名角色（排除旁白 / 你 / 我）
