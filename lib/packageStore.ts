@@ -3,24 +3,35 @@
 import fs from "node:fs";
 import path from "node:path";
 import { StoryPackage, StoryStatus, effectiveStatus } from "./storyPackage";
+import { bundledDataRoot, dataRoot, usesTemporaryStorage } from "./runtimeStorage";
 
-const DIR = path.join(process.cwd(), "data", "stories");
+const BUNDLED_DIR = path.join(bundledDataRoot(), "stories");
+const WRITE_DIR = path.join(dataRoot(), "stories");
 
 function ensureDir() {
-  fs.mkdirSync(DIR, { recursive: true });
+  fs.mkdirSync(WRITE_DIR, { recursive: true });
 }
 
-export function listPackages(): StoryPackage[] {
-  ensureDir();
+function readPackagesFrom(dir: string): StoryPackage[] {
+  if (!fs.existsSync(dir)) return [];
   const out: StoryPackage[] = [];
-  for (const f of fs.readdirSync(DIR)) {
+  for (const f of fs.readdirSync(dir)) {
     if (!f.endsWith(".json")) continue;
     try {
-      out.push(JSON.parse(fs.readFileSync(path.join(DIR, f), "utf8")));
+      out.push(JSON.parse(fs.readFileSync(path.join(dir, f), "utf8")));
     } catch {
       /* 跳过坏文件 */
     }
   }
+  return out;
+}
+
+export function listPackages(): StoryPackage[] {
+  ensureDir();
+  const merged = new Map<string, StoryPackage>();
+  for (const pkg of readPackagesFrom(BUNDLED_DIR)) merged.set(pkg.id, pkg);
+  for (const pkg of readPackagesFrom(WRITE_DIR)) merged.set(pkg.id, pkg);
+  const out = Array.from(merged.values());
   // 最近更新在前
   return out.sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
 }
@@ -37,7 +48,7 @@ export function listByStatus(status: StoryStatus): StoryPackage[] {
 export function getPackage(id: string): StoryPackage | null {
   ensureDir();
   // 约定文件名 = id；但兼容文件名与 id 不一致的旧种子（如 slip.json / id=slip-into-your-heart）
-  const p = path.join(DIR, `${safeId(id)}.json`);
+  const p = path.join(WRITE_DIR, `${safeId(id)}.json`);
   if (fs.existsSync(p)) {
     try {
       return JSON.parse(fs.readFileSync(p, "utf8"));
@@ -49,14 +60,15 @@ export function getPackage(id: string): StoryPackage | null {
 }
 
 // 找出某 id 对应的真实文件路径（兼容文件名 ≠ id 的旧种子）
-function fileForId(id: string): string | null {
-  const direct = path.join(DIR, `${safeId(id)}.json`);
+function fileForIdIn(dir: string, id: string): string | null {
+  if (!fs.existsSync(dir)) return null;
+  const direct = path.join(dir, `${safeId(id)}.json`);
   if (fs.existsSync(direct)) return direct;
-  for (const f of fs.readdirSync(DIR)) {
+  for (const f of fs.readdirSync(dir)) {
     if (!f.endsWith(".json")) continue;
     try {
-      const pkg = JSON.parse(fs.readFileSync(path.join(DIR, f), "utf8"));
-      if (pkg.id === id) return path.join(DIR, f);
+      const pkg = JSON.parse(fs.readFileSync(path.join(dir, f), "utf8"));
+      if (pkg.id === id) return path.join(dir, f);
     } catch {
       /* skip */
     }
@@ -69,13 +81,14 @@ export function savePackage(pkg: StoryPackage): StoryPackage {
   pkg.updatedAt = Date.now();
   pkg.createdAt = pkg.createdAt || pkg.updatedAt;
   pkg.version = (pkg.version || 0) + 1;
-  const target = fileForId(pkg.id) || path.join(DIR, `${safeId(pkg.id)}.json`);
+  // Serverless 线上代码目录只读；编辑内置故事时写入 /tmp 覆盖副本。
+  const target = fileForIdIn(WRITE_DIR, pkg.id) || path.join(WRITE_DIR, `${safeId(pkg.id)}.json`);
   fs.writeFileSync(target, JSON.stringify(pkg, null, 2), "utf8");
   return pkg;
 }
 
 export function deletePackage(id: string): boolean {
-  const p = fileForId(id);
+  const p = fileForIdIn(WRITE_DIR, id) || (!usesTemporaryStorage() ? fileForIdIn(BUNDLED_DIR, id) : null);
   if (!p) return false;
   fs.unlinkSync(p);
   return true;

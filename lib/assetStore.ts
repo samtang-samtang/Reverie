@@ -5,6 +5,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import crypto from "node:crypto";
+import { usesTemporaryStorage } from "./runtimeStorage";
 
 const UPLOAD_DIR = path.join(process.cwd(), "public", "uploads");
 
@@ -32,6 +33,8 @@ export async function persistRemoteAsset(
   if (!url || typeof url !== "string") return url;
   // 已是本地路径或 data URI，无需处理
   if (url.startsWith("/uploads/") || url.startsWith("data:")) return url;
+  // 线上 Serverless 的代码目录只读；Demo 模式保留远端临时 URL，避免写 public/uploads 失败。
+  if (usesTemporaryStorage()) return url;
   try {
     ensureDir();
     const res = await fetch(url, { signal: AbortSignal.timeout(120_000) });
@@ -40,7 +43,7 @@ export async function persistRemoteAsset(
     const fallback = kind === "video" ? "mp4" : "png";
     const ext = extFromContentType(res.headers.get("content-type"), fallback);
     const name = `${kind}-${Date.now()}-${crypto.randomBytes(4).toString("hex")}.${ext}`;
-    fs.writeFileSync(path.join(UPLOAD_DIR, name), buf);
+    fs.writeFileSync(path.join(UPLOAD_DIR, name), new Uint8Array(buf));
     return `/uploads/${name}`;
   } catch {
     // 下载失败时退回原 URL，至少短期内可用

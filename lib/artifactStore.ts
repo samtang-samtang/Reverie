@@ -2,8 +2,9 @@
 import fs from "node:fs";
 import path from "node:path";
 import { newId } from "./packageStore";
+import { dataRoot } from "./runtimeStorage";
 
-const ROOT = path.join(process.cwd(), "data");
+const ROOT = dataRoot();
 const OUTLINE_DIR = path.join(ROOT, "outlines");
 const SCRIPT_DIR = path.join(ROOT, "scripts");
 
