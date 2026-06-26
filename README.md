@@ -98,6 +98,31 @@ npm run build && npm run start
 
 打开 http://localhost:3000 即可游玩。**无需任何配置**，默认走内置 Mock 续写。
 
+### 局域网部署
+
+如果只想在本机部署,让同一 Wi-Fi / 局域网里的手机或其他电脑访问,使用：
+
+```bash
+npm run dev:lan
+# 或生产模式：
+npm run build && npm run start:lan
+```
+
+然后查看本机局域网 IP：
+
+```bash
+ipconfig getifaddr en0
+```
+
+假设输出是 `192.168.1.23`,同局域网设备访问：
+
+```text
+http://192.168.1.23:3000
+http://192.168.1.23:3000/admin
+```
+
+局域网模式下如果不配置 Supabase / Blob,故事会保存到本机 `data/stories/*.json`,生成图片/视频保存到本机 `public/uploads/`。只要这台电脑不关服务、不删除文件,前端和后台都能加载这些数据。
+
 ### 接入真实大模型（可选）
 
 复制 `.env.example` 为 `.env`，二选一（优先读 `ARK_*`，其次 `LLM_*`）：
